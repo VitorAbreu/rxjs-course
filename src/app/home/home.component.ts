@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { noop } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { createHttpObservable } from '../common/util';
 import { Course } from '../model/course';
@@ -12,8 +12,8 @@ import { Course } from '../model/course';
 })
 export class HomeComponent implements OnInit {
 
-    beginnersCourses: Course[];
-    advancedCourses: Course[];
+    beginnersCourses$: Observable<Course[]>;
+    advancedCourses$: Observable<Course[]>;
 
     constructor() {
 
@@ -22,19 +22,16 @@ export class HomeComponent implements OnInit {
     ngOnInit() {
         const http$ = createHttpObservable('api/courses');
 
-        const courses$ = http$.pipe(
+        const courses$: Observable<Course[]> = http$.pipe(
             map(res => res['payload'])
         );
 
-        courses$.subscribe(
-            (courses: Course[]) => {
-                // You shouldn't do this because we are trying to avoid nested complex callbacks or subscriptions
-                // and in the future it may happen
-                this.beginnersCourses = courses.filter(course => course.category == 'BEGINNER');
-                this.advancedCourses = courses.filter(course => course.category == 'ADVANCED');
-            },
-            noop,
-            () => console.log('end')
+        this.beginnersCourses$ = courses$.pipe(
+            map(courses => courses.filter(course => course.category == 'BEGINNER'))
+        )
+
+        this.advancedCourses$ = courses$.pipe(
+            map(courses => courses.filter(course => course.category == 'ADVANCED'))
         )
 
     }
