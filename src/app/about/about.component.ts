@@ -1,5 +1,7 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { noop, Observable } from 'rxjs';
+import { Component, OnInit } from '@angular/core';
+import { noop } from 'rxjs';
+import { createHttpObservable } from '../common/util';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'about',
@@ -11,18 +13,13 @@ export class AboutComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
-    //creating aa cold observable, to call API
-    const http$ = Observable.create(observer => {
-      fetch('/api/courses')
-        .then(data => data.json())
-        .then(body => {
-          observer.next(body);
-          observer.complete();
-        })
-        .catch(err => observer.error(err))
-    })
+    const http$ = createHttpObservable('api/courses');
 
-    http$.subscribe(
+    const courses$ = http$.pipe(
+      map(res => res['payload'])
+    );
+
+    courses$.subscribe(
       courses => console.log(courses),
       noop,
       () => console.log('end')
