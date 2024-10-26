@@ -1,7 +1,8 @@
-import {Component, OnInit} from '@angular/core';
-import {Course} from "../model/course";
-import {interval, Observable, of, timer} from 'rxjs';
-import {catchError, delayWhen, map, retryWhen, shareReplay, tap} from 'rxjs/operators';
+import { Component, OnInit } from '@angular/core';
+import { noop } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { createHttpObservable } from '../common/util';
+import { Course } from '../model/course';
 
 
 @Component({
@@ -11,14 +12,30 @@ import {catchError, delayWhen, map, retryWhen, shareReplay, tap} from 'rxjs/oper
 })
 export class HomeComponent implements OnInit {
 
+    beginnersCourses: Course[];
+    advancedCourses: Course[];
 
     constructor() {
 
     }
 
     ngOnInit() {
+        const http$ = createHttpObservable('api/courses');
 
+        const courses$ = http$.pipe(
+            map(res => res['payload'])
+        );
 
+        courses$.subscribe(
+            (courses: Course[]) => {
+                // You shouldn't do this because we are trying to avoid nested complex callbacks or subscriptions
+                // and in the future it may happen
+                this.beginnersCourses = courses.filter(course => course.category == 'BEGINNER');
+                this.advancedCourses = courses.filter(course => course.category == 'ADVANCED');
+            },
+            noop,
+            () => console.log('end')
+        )
 
     }
 

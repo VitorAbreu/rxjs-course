@@ -1,7 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { noop } from 'rxjs';
-import { createHttpObservable } from '../common/util';
-import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'about',
@@ -13,17 +10,7 @@ export class AboutComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
-    const http$ = createHttpObservable('api/courses');
-
-    const courses$ = http$.pipe(
-      map(res => res['payload'])
-    );
-
-    courses$.subscribe(
-      courses => console.log(courses),
-      noop,
-      () => console.log('end')
-    )
+    
   }
 
 }
