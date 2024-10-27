@@ -1,11 +1,10 @@
-import {AfterViewInit, Component, ElementRef, Inject, OnInit, ViewChild, ViewEncapsulation} from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Inject, OnInit, ViewChild } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
-import {Course} from "../model/course";
-import {FormBuilder, Validators, FormGroup} from "@angular/forms";
+import { Course } from "../model/course";
+import { FormBuilder, Validators, FormGroup } from "@angular/forms";
 import moment from 'moment';
-import {fromEvent} from 'rxjs';
-import {concatMap, distinctUntilChanged, exhaustMap, filter, mergeMap} from 'rxjs/operators';
-import {fromPromise} from 'rxjs/internal-compatibility';
+import { concatMap, filter } from 'rxjs/operators';
+import { fromPromise } from 'rxjs/internal-compatibility';
 
 @Component({
     selector: 'course-dialog',
@@ -37,10 +36,25 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
 
     }
 
+    // concatMap operator is a combination of map that transforms a value emitted into other and concat
+    // so this way when we are receiving multiple changes from the form we transform then to a http request
+    // and concat all changes so this way we'll control the sequence of the requests
     ngOnInit() {
+        this.form.valueChanges.pipe(
+            filter(() => this.form.valid),
+            concatMap(changes => this.saveCourse(changes))
+        ).subscribe()
 
+    }
 
-
+    saveCourse(changes) {
+        return fromPromise(fetch(`http://localhost:9000/api/courses/${this.course.id}`, {
+            method: 'PUT',
+            body: JSON.stringify(changes),
+            headers: {
+                'content-type': 'application/json'
+            }
+        }))
     }
 
 
