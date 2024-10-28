@@ -38,6 +38,12 @@ export class CourseComponent implements OnInit, AfterViewInit {
 
     }
 
+    // debounceTime operator is used when we have a burst of emissions and we don't want to all of them emit
+    // because it in this example we are typing on an input if every key up fired an emission we'll call the back and
+    // multiple unnecessary times, debounceTime makes a delay to make a emission secure if the time of debounce pass it emits the
+    // last value
+    // 
+    // distinctUntilChanged is used to avoid fire an emission exactly equals to the last emission
     ngAfterViewInit() {
         fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
             map(event => event.target.value),
