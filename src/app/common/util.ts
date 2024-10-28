@@ -13,13 +13,18 @@ import { Observable } from "rxjs";
  */
 export function createHttpObservable(url: string): Observable<any> {
     return Observable.create(observer => {
-        fetch(`http://localhost:9000/${url}`)
+      const controller = new AbortController();
+      const signal = controller.signal;
+
+        fetch(`http://localhost:9000/${url}`, {signal})
           .then(data => data.json())
           .then(body => {
             observer.next(body);
             observer.complete();
           })
           .catch(err => observer.error(err))
+
+        return () => controller.abort();
       })
 }
 
