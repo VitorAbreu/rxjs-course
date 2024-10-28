@@ -3,8 +3,9 @@ import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
 import { Course } from "../model/course";
 import { FormBuilder, Validators, FormGroup } from "@angular/forms";
 import moment from 'moment';
-import { concatMap, filter } from 'rxjs/operators';
+import { concatMap, exhaustMap, filter, tap } from 'rxjs/operators';
 import { fromPromise } from 'rxjs/internal-compatibility';
+import { fromEvent } from 'rxjs';
 
 @Component({
     selector: 'course-dialog',
@@ -16,7 +17,7 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
     form: FormGroup;
     course:Course;
 
-    @ViewChild('saveButton', { static: true }) saveButton: ElementRef;
+    @ViewChild('saveButton', { static: true, read: ElementRef }) saveButton: ElementRef;
 
     @ViewChild('searchInput', { static: true }) searchInput : ElementRef;
 
@@ -59,9 +60,13 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
 
 
 
+    // exhaustMap prevents multiple emissions occurs until the first emission ends, and is combined with Map
     ngAfterViewInit() {
-
-
+        fromEvent(this.saveButton.nativeElement, 'click').pipe(
+            tap(() => console.log('cliquei')),
+            exhaustMap(() => this.saveCourse(this.form.value))
+        )
+        .subscribe();
     }
 
 
