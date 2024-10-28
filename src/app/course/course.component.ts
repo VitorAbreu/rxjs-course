@@ -1,10 +1,10 @@
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from "@angular/router";
 import { Course } from "../model/course";
-import { Observable } from 'rxjs';
+import { fromEvent, Observable } from 'rxjs';
 import { Lesson } from '../model/lesson';
 import { createHttpObservable } from '../common/util';
-import { map } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 
 
 @Component({
@@ -39,10 +39,11 @@ export class CourseComponent implements OnInit, AfterViewInit {
     }
 
     ngAfterViewInit() {
-
-
-
-
+        fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
+            map(event => event.target.value),
+            debounceTime(400),
+            distinctUntilChanged()
+        ).subscribe(console.log)
     }
 
 
