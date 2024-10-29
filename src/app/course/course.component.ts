@@ -1,10 +1,10 @@
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from "@angular/router";
 import { Course } from "../model/course";
-import { concat, fromEvent, Observable } from 'rxjs';
+import { fromEvent, Observable } from 'rxjs';
 import { Lesson } from '../model/lesson';
 import { createHttpObservable } from '../common/util';
-import { debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
 
 
 @Component({
@@ -43,16 +43,13 @@ export class CourseComponent implements OnInit, AfterViewInit {
     // switchmap cancels the last emission by unsubscribe if a new emission is received and the first operation didn't finish until
     // the new emission starts
     ngAfterViewInit() {
-        const searchLessons$ = fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
+        this.lessons$ = fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
             map(event => event.target.value),
+            startWith(''),
             debounceTime(400),
             distinctUntilChanged(),
             switchMap(search => this.loadLessons(search))
-        );
-
-        const initialLessons$ = this.loadLessons();
-
-        this.lessons$ = concat(initialLessons$, searchLessons$);
+        ); 
     }
 
     loadLessons(search = ''): Observable<Lesson[]> {
