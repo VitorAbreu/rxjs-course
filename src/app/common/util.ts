@@ -16,8 +16,13 @@ export function createHttpObservable(url: string): Observable<any> {
       const controller = new AbortController();
       const signal = controller.signal;
 
-        fetch(`http://localhost:9000/${url}`, {signal})
-          .then(data => data.json())
+        fetch(url, {signal})
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error(response.statusText);
+              }
+              return response.json();
+          })
           .then(body => {
             observer.next(body);
             observer.complete();

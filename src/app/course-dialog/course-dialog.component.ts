@@ -49,7 +49,7 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
     }
 
     saveCourse(changes) {
-        return fromPromise(fetch(`http://localhost:9000/api/courses/${this.course.id}`, {
+        return fromPromise(fetch(`/api/courses/${this.course.id}`, {
             method: 'PUT',
             body: JSON.stringify(changes),
             headers: {
