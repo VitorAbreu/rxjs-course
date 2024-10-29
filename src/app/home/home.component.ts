@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
-import { catchError, finalize, map, shareReplay, tap } from 'rxjs/operators';
+import { Observable, timer } from 'rxjs';
+import { delayWhen, map, retryWhen, shareReplay, tap } from 'rxjs/operators';
 import { createHttpObservable } from '../common/util';
 import { Course } from '../model/course';
 
@@ -29,17 +29,16 @@ export class HomeComponent implements OnInit {
         // 
         // catchError is used to replace the observable that will error out and then stop to emit to a new observable that
         // replace the expected value, it can be any observable like a offline database, it depends how you want to treat the error
+        // 
+        // retryWhen creates a mirror of the source observable when the source throws an error and then subscribe into a brand new observable
+        // and retries, we are using delayWhen to make the retry happen 2 seconds after the error throws
         const courses$: Observable<Course[]> = http$.pipe(
-            catchError(err => {
-                // it can be a message handler to emit the error
-                console.log('Error occurred', err);
-                // it catches the error, you can do a treatment and then re-throw the error 
-                return throwError(err)
-            }),
-            finalize(() => console.log('Finalize execution')),
             tap(() => console.log('http request executed')),
             map(res => res['payload']),
-            shareReplay()
+            shareReplay(),
+            retryWhen(error => error.pipe(
+                delayWhen(() => timer(2000))
+            ))
         );
 
         this.beginnersCourses$ = courses$.pipe(
