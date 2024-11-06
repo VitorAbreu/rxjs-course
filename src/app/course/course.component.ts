@@ -1,10 +1,10 @@
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from "@angular/router";
 import { Course } from "../model/course";
-import { fromEvent, Observable } from 'rxjs';
+import { forkJoin, fromEvent, Observable } from 'rxjs';
 import { Lesson } from '../model/lesson';
 import { createHttpObservable } from '../common/util';
-import { debounceTime, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { debug, RxjsLoggingLevel, setRxjsLoggingLevel } from '../common/debug';
 
 
@@ -31,11 +31,22 @@ export class CourseComponent implements OnInit, AfterViewInit {
 
         this.courseId = this.route.snapshot.params['id'];
 
-        this.course$ = createHttpObservable(`api/courses/${this.courseId}`).pipe(
-            debug(RxjsLoggingLevel.INFO, 'courses value '),
-        );
+        this.course$ = createHttpObservable(`api/courses/${this.courseId}`)
+        this.lessons$ = this.loadLessons();
 
-        setRxjsLoggingLevel(RxjsLoggingLevel.TRACE)
+        // forkJoin is used to do parallel requests once all the requests are completed it emits, if one of them throws
+        // an error or didn't complete it won't emit, if one of the observables emits more then a value before completes
+        // it'll only emits the last value
+        forkJoin([this.course$, this.lessons$]).pipe(
+            tap(([course, lessons]) => {
+                console.log('course', course)
+                console.log('lessons', lessons)
+            })
+        ).subscribe()
+        // .pipe(
+        //     debug(RxjsLoggingLevel.INFO, 'courses value '),
+        // );
+        // setRxjsLoggingLevel(RxjsLoggingLevel.TRACE)
     }
 
     // debounceTime operator is used when we have a burst of emissions and we don't want to all of them emit
@@ -51,12 +62,12 @@ export class CourseComponent implements OnInit, AfterViewInit {
         this.lessons$ = fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
             map(event => event.target.value),
             startWith(''),
-            debug(RxjsLoggingLevel.TRACE, 'search '),
             debounceTime(400),
             distinctUntilChanged(),
             switchMap(search => this.loadLessons(search)),
-            debug(RxjsLoggingLevel.DEBUG, 'lessons value'),
         ); 
+        // debug(RxjsLoggingLevel.TRACE, 'search '),
+        // debug(RxjsLoggingLevel.DEBUG, 'lessons value'),
     }
 
     loadLessons(search = ''): Observable<Lesson[]> {
