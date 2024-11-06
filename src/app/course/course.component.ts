@@ -5,6 +5,7 @@ import { fromEvent, Observable } from 'rxjs';
 import { Lesson } from '../model/lesson';
 import { createHttpObservable } from '../common/util';
 import { debounceTime, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
+import { debug, RxjsLoggingLevel, setRxjsLoggingLevel } from '../common/debug';
 
 
 @Component({
@@ -30,7 +31,11 @@ export class CourseComponent implements OnInit, AfterViewInit {
 
         this.courseId = this.route.snapshot.params['id'];
 
-        this.course$ = createHttpObservable(`api/courses/${this.courseId}`);
+        this.course$ = createHttpObservable(`api/courses/${this.courseId}`).pipe(
+            debug(RxjsLoggingLevel.INFO, 'courses value '),
+        );
+
+        setRxjsLoggingLevel(RxjsLoggingLevel.TRACE)
     }
 
     // debounceTime operator is used when we have a burst of emissions and we don't want to all of them emit
@@ -46,9 +51,11 @@ export class CourseComponent implements OnInit, AfterViewInit {
         this.lessons$ = fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
             map(event => event.target.value),
             startWith(''),
+            debug(RxjsLoggingLevel.TRACE, 'search '),
             debounceTime(400),
             distinctUntilChanged(),
-            switchMap(search => this.loadLessons(search))
+            switchMap(search => this.loadLessons(search)),
+            debug(RxjsLoggingLevel.DEBUG, 'lessons value'),
         ); 
     }
 
